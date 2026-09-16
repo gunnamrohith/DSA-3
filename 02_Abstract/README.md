@@ -1,0 +1,3 @@
+# Abstract
+
+The Document and Code Similarity Analyzer is a lightweight system for detecting exact and near-duplicate patterns in programming submissions. The application normalizes source code and combines Rabin-Karp fingerprinting, KMP, the Z-Algorithm, suffix arrays with Kasai's LCP algorithm, and TF-IDF cosine similarity to produce an explainable similarity score. A browser dashboard supports direct code entry, file upload, visual comparison, and batch analysis. The accompanying dataset provides 100 predefined submissions across 25 DSA problems and four implementation styles, enabling repeatable demonstrations and testing without external dependencies.

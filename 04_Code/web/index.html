@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Similarity Analyzer | DSA-3 (25CS2103E)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Code Similarity Analyzer <span class="brand-badge">DSA-3 &bull; 25CS2103E</span></h1>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+            Plagiarism & Similarity Detection Engine &bull; Department of Computer Science & Engineering
+          </p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Dark/Light Theme Toggle Button -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()">
+          ☀️ Light Mode
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs Bar -->
+    <nav class="nav-tabs">
+      <button class="nav-tab-btn active" data-tab="tab-analyzer" onclick="switchTab('tab-analyzer')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Similarity Analyzer
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-flow" onclick="switchTab('tab-flow')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        Pipeline Flow Visualizer
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-theory" onclick="switchTab('tab-theory')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        DSA Algorithm Lab
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-batch" onclick="switchTab('tab-batch')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        Classroom Batch Matrix
+      </button>
+    </nav>
+
+    <!-- ====================================================================
+         TAB 1: SIMILARITY ANALYZER (Main Live Engine)
+         ==================================================================== -->
+    <div id="tab-analyzer" class="tab-view active">
+      <section class="dataset-browser" aria-labelledby="datasetTitle">
+        <div class="dataset-browser-heading">
+          <div>
+            <span class="section-kicker">Exam submission dataset</span>
+            <h2 id="datasetTitle">Choose a problem and two student solutions</h2>
+          </div>
+          <div class="dataset-count"><strong id="catalogCount">100</strong> predefined submissions</div>
+        </div>
+        <div class="dataset-filter-grid">
+          <label class="filter-field filter-search">
+            <span>Search methods</span>
+            <input id="catalogSearch" type="search" placeholder="Search all methods: Bubble Sort, LCS, Kadane..." autocomplete="off">
+          </label>
+          <label class="filter-field">
+            <span>Category</span>
+            <select id="categoryFilter"></select>
+          </label>
+          <label class="filter-field">
+            <span>Algorithm</span>
+            <select id="algorithmFilter"></select>
+          </label>
+          <label class="filter-field">
+            <span>Student A</span>
+            <select id="studentFilterA"></select>
+          </label>
+          <label class="filter-field">
+            <span>Student B</span>
+            <select id="studentFilterB"></select>
+          </label>
+        </div>
+        <div class="dataset-flow-footer">
+          <div id="algorithmResults" class="algorithm-results" aria-live="polite"></div>
+          <div class="dataset-actions">
+            <button id="loadComparisonBtn" class="btn-cta-analyze" type="button" onclick="loadSelectedComparison()">Load student comparison</button>
+            <button class="btn-secondary" type="button" onclick="addSelectedAlgorithmToBatch()">Add all 4 students to batch</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dual Code Editor Workspace -->
+      <div class="workspace-grid">
+        <!-- Candidate 1 Editor Card -->
+        <div class="code-pane-card">
+          <div class="pane-header">
+            <div class="pane-header-top">
+              <div class="pane-title">
+                <span style="color: var(--primary-accent);">Candidate 1</span>
+                <input type="text" id="candNameA" class="candidate-name-input" value="Candidate 1 (Bubble Sort)" title="Candidate 1 Name">
+              </div>
+              <div class="pane-actions">
+                <label class="btn-upload-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  Upload File
+                  <input type="file" id="fileInputA" accept=".java,.c,.cpp,.txt" style="display:none;">
+                </label>
+              </div>
+            </div>
+            <div id="selectionMetaA" class="selection-meta">Select Student A from the dataset above</div>
+          </div>
+          <textarea id="codeA" class="code-textarea" placeholder="Paste or select Candidate 1 Java code here..."></textarea>
+        </div>
+
+        <!-- Candidate 2 Editor Card -->
+        <div class="code-pane-card">
+          <div class="pane-header">
+            <div class="pane-header-top">
+              <div class="pane-title">
+                <span style="color: var(--accent-purple);">Candidate 2</span>
+                <input type="text" id="candNameB" class="candidate-name-input" value="Candidate 2 (Copied Bubble Sort)" title="Candidate 2 Name">
+              </div>
+              <div class="pane-actions">
+                <label class="btn-upload-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  Upload File
+                  <input type="file" id="fileInputB" accept=".java,.c,.cpp,.txt" style="display:none;">
+                </label>
+              </div>
+            </div>
+            <div id="selectionMetaB" class="selection-meta">Select Student B from the dataset above</div>
+          </div>
+          <textarea id="codeB" class="code-textarea" placeholder="Paste or select Candidate 2 Java code here..."></textarea>
+        </div>
+      </div>
+
+      <!-- Action Button Area -->
+      <div class="action-control-bar">
+        <button id="btnRun" class="btn-cta-analyze" onclick="runAnalysis()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Run Multi-Algorithm Analysis
+        </button>
+        <button class="btn-secondary" onclick="clearEditors()">
+          Clear Editors
+        </button>
+      </div>
+
+      <!-- Results Dashboard Section -->
+      <div id="resultsSection" class="results-container">
+        <!-- Verdict Banner Card -->
+        <div class="verdict-card">
+          <div class="verdict-info">
+            <div id="verdictBadge" class="status-badge critical">CALCULATING VERDICT...</div>
+            <h2 id="verdictTitle">Analysis Completed</h2>
+            <p>
+              Submissions evaluated using linear-time string algorithms (Rabin-Karp Rolling Hash, KMP, Z-Algorithm, Suffix Array + Kasai's LCP, and TF-IDF Word Cosine).
+            </p>
+          </div>
+          <div class="circle-gauge" id="scoreCircle" style="--percent: 85;">
+            <div class="circle-gauge-inner">
+              <span id="overallScoreVal" class="gauge-score">85%</span>
+              <span class="gauge-label">SIMILARITY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mathematical Proof & Step-by-Step Calculation Box -->
+        <div class="proof-box">
+          <div class="proof-header">
+            <h3>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              Algorithmic Calculation Proof (How this Score was Derived)
+            </h3>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Formula: 0.35*RK + 0.25*SA + 0.20*KMP + 0.10*Z + 0.10*TFIDF</span>
+          </div>
+          <div id="formulaProofBox" class="math-formula-card">
+            Click "Run Multi-Algorithm Analysis" to inspect the live formula substitution...
+          </div>
+          <div class="provenance-tags">
+            <div class="prov-item">
+              <strong>1. Radar Chart Provenance:</strong>
+              Plots the 5 normalized similarity percentages $(0-100\%)$ returned directly by each Java algorithm method.
+            </div>
+            <div class="prov-item">
+              <strong>2. Latency Benchmarks Provenance:</strong>
+              Hardware timer readings recorded in Java using <code>System.nanoTime()</code> immediately before and after execution, displayed in microseconds ($\mu s$).
+            </div>
+            <div class="prov-item">
+              <strong>3. Substring Highlighting Provenance:</strong>
+              Identified by adjacent suffixes in the Generalized Suffix Array where $\text{LCP}[i] \ge 20$ and mapped back to source lines by <code>SimplePreprocessor</code>.
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Focused Algorithm Stat Cards -->
+        <div class="metric-grid">
+          <div class="stat-card">
+            <div class="stat-tag">CO2 &bull; CO6 (Rolling Hash)</div>
+            <div class="stat-title">Rabin-Karp Winnowing</div>
+            <div id="valRabinKarp" class="stat-val">--%</div>
+            <div class="stat-detail">Rolling Hash (B=313, M=10^9+7)</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-tag">CO2 (Linear Matching)</div>
+            <div class="stat-title">KMP Algorithm</div>
+            <div id="valKMP" class="stat-val">--%</div>
+            <div class="stat-detail">Longest Prefix-Suffix (LPS) Array</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-tag">CO2 (Z-Function)</div>
+            <div class="stat-title">Z-Algorithm</div>
+            <div id="valZAlgo" class="stat-val">--%</div>
+            <div class="stat-detail">Prefix-Box Linear Window O(N)</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-tag">CO2 (Suffix Structures)</div>
+            <div class="stat-title">Suffix Array + LCP</div>
+            <div id="valSuffixLCP" class="stat-val">--%</div>
+            <div id="detailSuffixLCP" class="stat-detail">Longest Common Substring (LCS)</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-tag">Information Retrieval</div>
+            <div class="stat-title">TF-IDF Word Cosine</div>
+            <div id="valTfidf" class="stat-val">--%</div>
+            <div class="stat-detail">Vocabulary Distribution Vector</div>
+          </div>
+        </div>
+
+        <!-- Visual Canvas Charts -->
+        <div class="chart-grid">
+          <div class="chart-box">
+            <h3>Algorithm Dimensional Radar</h3>
+            <canvas id="radarCanvas" width="480" height="260" style="max-width:100%;"></canvas>
+          </div>
+          <div class="chart-box">
+            <h3>Execution Latency (Microseconds &bull; µs)</h3>
+            <canvas id="latencyCanvas" width="480" height="260" style="max-width:100%;"></canvas>
+          </div>
+        </div>
+
+        <!-- Synchronized Side-by-Side Diff Viewer -->
+        <div class="diff-viewer-panel">
+          <div class="diff-panel-header">
+            <h3>Synchronized Plagiarism Highlight Viewer</h3>
+            <span style="font-size:0.82rem; color:var(--text-secondary);">
+              Highlighted red lines denote exact matching substrings detected by Suffix Array & KMP.
+            </span>
+          </div>
+          <div class="diff-columns-wrapper">
+            <div id="diffPaneA" class="diff-column-pane"></div>
+            <div id="diffPaneB" class="diff-column-pane"></div>
+          </div>
+          <!-- Clickable List of Matching Code Spans -->
+          <div id="matchedBlocksList" class="matched-clones-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         TAB 2: PIPELINE FLOW & WORKFLOW VISUALIZER
+         ==================================================================== -->
+    <div id="tab-flow" class="tab-view">
+      <h2 style="font-size: 1.3rem; margin-bottom: 16px;">Step-by-Step Architecture & Dataflow Workflow</h2>
+      <div class="flow-stages-container">
+        <!-- Stage 1 -->
+        <div class="flow-step-card">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-content">
+            <h3>Code Ingestion & Lexical Cleaning (SimplePreprocessor)</h3>
+            <p>
+              Raw source files are accepted from candidates. The preprocessor removes all single-line comments (<code>//</code>) and block comments (<code>/* ... */</code>), standardizes indentation and whitespace, and stores a precise line map so that any discovered plagiarism matches can be projected back to the original source line numbers.
+            </p>
+            <div class="flow-code-preview">
+              Input: "for ( int i = 0 ; i < n ; i ++ ) { // sort array"  ───►  Cleaned: "for ( int i = 0 ; i < n ; i ++ ) {"
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="flow-step-card">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-content">
+            <h3>Rabin-Karp Rolling Hash & Winnowing Fingerprinting (CO2, CO6)</h3>
+            <p>
+              Computes rolling polynomial hashes over sliding $k$-grams ($k=12$) using base $B=313$ and prime modulo $M=10^9+7$. The Winnowing algorithm then slides a window of size $w=6$ and selects the minimum hash in each window to compress the fingerprint density while guaranteeing detection of any shared snippet of length $\ge k + w - 1$. Exact string verification is performed to eliminate hash collisions (Las Vegas principle).
+            </p>
+            <div class="flow-code-preview">
+              Formula: H_new = ((H_old - c_out * B^(k-1)) * B + c_in) mod M  [O(1) Rolling Update]
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="flow-step-card">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-content">
+            <h3>Knuth-Morris-Pratt (KMP) Linear Search (CO2)</h3>
+            <p>
+              Extracts code patterns and computes the Longest Prefix-Suffix (LPS / $\pi$) table in $O(M)$ time. Scans the second submission in strict $O(N)$ linear time without backtracking on the text pointer to determine how much of Candidate 2 can be constructed directly from substrings of Candidate 1.
+            </p>
+            <div class="flow-code-preview">
+              LPS[i] = Length of longest proper prefix of P[0..i] that is also a suffix of P[0..i]
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="flow-step-card">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-content">
+            <h3>Z-Algorithm Linear Prefix Box Matching (CO2)</h3>
+            <p>
+              Maintains an active $[L, R]$ interval window to compute the $Z$-box array in $O(N)$ linear time, quantifying shared structural prefixes between the submissions.
+            </p>
+            <div class="flow-code-preview">
+              Z[i] = Length of longest common prefix between S and suffix starting at index i
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="flow-step-card">
+          <div class="flow-step-num">5</div>
+          <div class="flow-step-content">
+            <h3>Suffix Array + Kasai's LCP Array (Longest Common Substrings) (CO2)</h3>
+            <p>
+              Concatenates the submissions: <code>Code_A + '#' + Code_B</code>. Constructs the Suffix Array using prefix doubling in $O(N \log^2 N)$ and Kasai's LCP Array in $O(N)$ time. By inspecting adjacent suffixes originating from different submissions, the engine discovers the exact Longest Common Substrings (LCS) and pinpoints line coordinates.
+            </p>
+            <div class="flow-code-preview">
+              Kasai Lemma: LCP(rank[i+1]) >= LCP(rank[i]) - 1  [Guarantees strict O(N) LCP construction]
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 6 -->
+        <div class="flow-step-card">
+          <div class="flow-step-num">6</div>
+          <div class="flow-step-content">
+            <h3>Multi-Metric Consensus Scoring & Verdict</h3>
+            <p>
+              The engine blends all individual signals into a calibrated consensus score:
+              <code>Score = 0.35 * RK + 0.25 * SA + 0.20 * KMP + 0.10 * Z + 0.10 * TFIDF</code>.
+              Outputs a verdict: <strong>CRITICAL (> 70%)</strong>, <strong>WARNING (35-70%)</strong>, or <strong>SAFE (< 35%)</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         TAB 3: DSA ALGORITHM LAB & THEORY
+         ==================================================================== -->
+    <div id="tab-theory" class="tab-view">
+      <h2 style="font-size: 1.3rem; margin-bottom: 16px;">DSA-3 Algorithm Theory & Complexity Matrix</h2>
+      <div class="algo-theory-grid">
+        <!-- Card 1 -->
+        <div class="theory-card">
+          <span class="co-badge">CO2 &bull; CO6</span>
+          <h3>Rabin-Karp Rolling Hash</h3>
+          <p>
+            Treats a string of characters as numbers in base $B$ modulo prime $M$. When sliding a window of size $k$ across text $T$, the hash of the next $k$-gram is computed in $O(1)$ constant time by subtracting the contribution of the outgoing character and adding the new incoming character.
+          </p>
+          <p><strong>Time Complexity:</strong> $O(N+M)$ average, $O(N \cdot M)$ worst-case.</p>
+          <p><strong>Space Complexity:</strong> $O(1)$ auxiliary space.</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="theory-card">
+          <span class="co-badge">CO2</span>
+          <h3>Knuth-Morris-Pratt (KMP)</h3>
+          <p>
+            Avoids the $O(N \cdot M)$ worst-case of naive search by precomputing the Longest Prefix-Suffix (LPS / $\pi$) table. When a character mismatch occurs, the text pointer $i$ never retreats; instead, the pattern pointer $j$ jumps according to the LPS table.
+          </p>
+          <p><strong>Time Complexity:</strong> Strict $O(N+M)$ worst-case.</p>
+          <p><strong>Space Complexity:</strong> $O(M)$ for the LPS table.</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="theory-card">
+          <span class="co-badge">CO2</span>
+          <h3>Z-Algorithm (Z-Function)</h3>
+          <p>
+            Computes $Z[i]$, the length of the longest common prefix between string $S$ and the suffix of $S$ starting at index $i$. By tracking the rightmost match interval $[L, R]$, the algorithm reuses prior computations to achieve strict linear time.
+          </p>
+          <p><strong>Time Complexity:</strong> Strict $O(N)$ linear time.</p>
+          <p><strong>Space Complexity:</strong> $O(N)$ for the $Z$-array.</p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="theory-card">
+          <span class="co-badge">CO2</span>
+          <h3>Suffix Array + Kasai's LCP</h3>
+          <p>
+            The Suffix Array contains sorted suffix starting indices. Kasai's algorithm constructs the Longest Common Prefix (LCP) array in $O(N)$ time by exploiting the property that the LCP of successive suffixes in the original text decreases by at most 1.
+          </p>
+          <p><strong>Time Complexity:</strong> $O(N \log^2 N)$ construction, $O(N)$ LCP.</p>
+          <p><strong>Space Complexity:</strong> $O(N)$ auxiliary space.</p>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="theory-card">
+          <span class="co-badge">IR &bull; Vector Space</span>
+          <h3>TF-IDF & Cosine Similarity</h3>
+          <p>
+            Treats source code submissions as high-dimensional term frequency vectors. Computes sublinear term frequency weights ($1 + \log(\text{tf})$) and measures the cosine of the angle between Candidate 1 and Candidate 2 in the vocabulary space.
+          </p>
+          <p><strong>Time Complexity:</strong> $O(N)$ linear time.</p>
+          <p><strong>Space Complexity:</strong> $O(\text{Vocabulary})$ space.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         TAB 4: REAL-TIME CLASSROOM BATCH MATRIX SCANNER
+         ==================================================================== -->
+    <div id="tab-batch" class="tab-view">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+        <div>
+          <h2 style="font-size: 1.3rem; margin-bottom: 4px;">Live Classroom Batch Scanner (Java REST API)</h2>
+          <p style="color: var(--text-secondary); font-size: 0.88rem;">
+            Submits all enrolled exam submissions to <code>/api/batch</code>. Our Java backend dynamically evaluates every pair $(i, j)$ using Rabin-Karp, KMP, and Suffix Array.
+          </p>
+        </div>
+        <div class="batch-controls">
+          <button id="btnRunBatch" class="btn-cta-analyze" style="padding: 10px 22px; font-size:0.88rem;" onclick="executeBatchScan()">
+            Execute Real-Time Batch API Call
+          </button>
+          <button class="btn-secondary" style="padding: 10px 18px; font-size:0.85rem;" onclick="addCustomBatchCandidate()">
+            + Add Candidate
+          </button>
+          <button class="btn-secondary" style="padding: 10px 18px; font-size:0.85rem;" onclick="resetDefaultBatch()">
+            Reset Demo Submissions
+          </button>
+        </div>
+      </div>
+
+      <!-- Enrolled Candidates Chips -->
+      <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">
+        Enrolled Exam Submissions in Batch:
+      </div>
+      <div id="batchCandidatesList" class="batch-candidates-list"></div>
+
+      <!-- Heatmap Table Container -->
+      <div class="batch-container">
+        <div id="batchMatrixTableContainer">
+          <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+            Click <strong>"Execute Real-Time Batch API Call"</strong> above to send submissions to Java backend and compute the pairwise matrix live!
+          </div>
+        </div>
+        <div style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 0.82rem; color: var(--text-secondary);">
+          <div style="display: flex; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 14px; height: 14px; background: rgba(239, 68, 68, 0.35); border-radius: 3px;"></span>
+              High Plagiarism (> 70%)
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 14px; height: 14px; background: rgba(245, 158, 11, 0.3); border-radius: 3px;"></span>
+              Suspicious (35% - 70%)
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 14px; height: 14px; background: rgba(16, 185, 129, 0.2); border-radius: 3px;"></span>
+              Safe (< 35%)
+            </div>
+          </div>
+          <span style="font-style: italic;">Tip: Click on ANY cell in the table to load that exact pair into the side-by-side diff viewer!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>Data Structures and Algorithms - 3 (25CS2103E) &bull; Code Similarity Analyzer</div>
+      <div style="margin-top: 4px;">Department of Computer Science & Engineering</div>
+    </footer>
+  </div>
+
+  <script src="/data/catalog.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/diffViewer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
